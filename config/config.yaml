@@ -29,9 +29,14 @@ evaluacion:
   tolerancia_mano: 1.5e-4       # actividades a mano: 4 decimales, truncado o redondeo
   max_intentos: 2               # envíos permitidos (lo impone el Apps Script)
   accion: "guardar"
-  # ⚠️ REEMPLAZAR por los valores reales al desplegar el Apps Script de U4.
+  # ⚠️ En `main` el token va vacío: las credenciales reales se empaquetan
+  # dentro de cada grader/*.txt al construirlos (tools/build_grader.py lee
+  # este archivo en la rama `test`). Para rotar el token: edítalo en `test`,
+  # corre `python tools/build_grader.py` y publica los blobs.
+  # La URL no es secreta; el token sí.
   webhook_token: ""
-  apps_script_url: ""
+  apps_script_url: "https://script.google.com/macros/s/AKfycbzD5k2BVwJ6pHjBgbc3-f1pbV9zrX0AloZfPiCyHSrsRZ7Kfno6ZQOnqzEbTikVlO6lRQ/exec"
+
 
 datos:
   # Ejemplos del libro usados en cuadernos y pruebas.

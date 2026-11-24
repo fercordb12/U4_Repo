@@ -14,6 +14,7 @@ tiene en el libro para poder citarla.
 
 | Archivo | Figura | Tema |
 |---|---|---|
+| `figPT5-1_ajuste_vs_interpolacion.jpg` | PT5.1 | Tres intentos de ajustar una "mejor" curva a cinco puntos: regresión, interpolación lineal e interpolación curvilínea |
 | `fig18-2_interpolacion_lineal.jpg` | 18.2 | Triángulos semejantes en la interpolación lineal |
 | `fig18-3_ln2_lineal.jpg` | 18.3 | Dos interpolaciones lineales de $\ln 2$ |
 | `fig18-4_ln2_cuadratica.jpg` | 18.4 | Interpolación cuadrática de $\ln 2$ |

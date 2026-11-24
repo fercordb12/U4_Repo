@@ -54,10 +54,11 @@ except ImportError:
 
 def _raiz_local():
     """Sube desde la carpeta actual hasta encontrar lib/robomat.py."""
-    candidatos = [os.getcwd()]
+    candidatos = []
     nb = globals().get("__vsc_ipynb_file__")
     if nb:
         candidatos.append(os.path.dirname(os.path.abspath(nb)))
+    candidatos.append(os.getcwd())
     for base in candidatos:
         b = base
         for _ in range(6):
@@ -80,6 +81,58 @@ def _normaliza(enlace):
     return enlace
 
 
+# Repositorio del curso (upstream) y carpetas que el alumno nunca edita:
+# se refrescan en cada ejecución para que el material y el motor nunca estén
+# atrasados, aunque el fork se haya quedado viejo.
+CURSO = "https://github.com/ITH-MGL-MN/" + REPO_NOMBRE
+MATERIAL = ("lib", "grader", "config", "docs", "ejercicios", "tools")
+
+
+def _git(*args):
+    """Corre git dentro del clon. Devuelve (funcionó, salida)."""
+    r = subprocess.run(["git", "-C", REPO] + list(args),
+                       capture_output=True, text=True)
+    return r.returncode == 0, (r.stdout + r.stderr).strip()
+
+
+def actualizar():
+    """Trae tus commits de GitHub y refresca el material del curso.
+
+    El clon de Drive es desechable: tus respuestas viven en el cuaderno.
+    Primero se actualiza el fork (lo que editaste en GitHub) y después se
+    copia el material del curso desde `upstream/main`. Si tienes cambios
+    locales en el clon, no se tocan: se avisa y se sigue.
+    """
+    ok, _ = _git("rev-parse", "--is-inside-work-tree")
+    if not ok:
+        print("⚠️ La carpeta no es un repositorio git: uso los archivos tal cual.")
+        return
+    _git("remote", "add", "upstream", CURSO + ".git")
+    ok, salida = _git("fetch", "--all", "--prune", "--quiet")
+    if not ok:
+        print("⚠️ No pude conectar con GitHub; sigo con lo que hay en Drive.")
+        return
+
+    _git("checkout", "--", *MATERIAL)          # limpia el refresco anterior
+    _, rama = _git("rev-parse", "--abbrev-ref", "HEAD")
+    rama = rama or "main"
+    ok, salida = _git("merge", "--ff-only", "origin/" + rama)
+    if ok:
+        print("Fork        : al día con tus commits de GitHub")
+    else:
+        print("⚠️ Tu fork no avanza en línea recta (tienes commits propios")
+        print("   o cambios locales): lo dejo como está y solo refresco el")
+        print("   material del curso.")
+
+    ok, salida = _git("checkout", "upstream/main", "--", *MATERIAL)
+    if ok:
+        _git("reset", "--quiet")
+        _, sha = _git("rev-parse", "--short", "upstream/main")
+        print("Material    : actualizado al curso", sha)
+    else:
+        print("⚠️ No pude refrescar el material del curso:", salida.splitlines()[:1])
+
+
 if not ES_COLAB:
     REPO = _raiz_local()
     if REPO is None:
@@ -99,8 +152,10 @@ else:
         try:
             with open(ruta_json, encoding="utf-8") as f:
                 guardado = json.load(f)
-        except Exception:
-            guardado = {{}}
+        except (OSError, json.JSONDecodeError) as exc:
+            raise RuntimeError(
+                f"No se pudo leer la configuracion de Drive: {{ruta_json}}"
+            ) from exc
 
     enlace = (guardado.get("repo") or "").strip()
     if enlace:
@@ -123,13 +178,29 @@ else:
     if not os.path.exists(REPO):
         print("Clonando tu repositorio…")
         subprocess.run(["git", "clone", enlace + ".git", REPO], check=True)
-    else:
-        print("Actualizando tu repositorio…")
-        subprocess.run(["git", "-C", REPO, "pull", "--ff-only"], check=False)
+    actualizar()
 
     with open(ruta_json, "w", encoding="utf-8") as f:
         json.dump({{"repo": enlace}}, f, indent=1)
     print("Repositorio :", REPO)
+    print("Actualizar  : vuelve a ejecutar esta celda cuando subas cambios a GitHub")
+
+# Instala dependencias del repositorio solo si falta alguna.
+import importlib.util
+
+_modulos_requeridos = ("numpy", "scipy", "sympy", "matplotlib", "yaml", "requests")
+_faltantes = [nombre for nombre in _modulos_requeridos
+              if importlib.util.find_spec(nombre) is None]
+if _faltantes:
+    requisitos = os.path.join(REPO, "requirements.txt")
+    if not os.path.isfile(requisitos):
+        raise FileNotFoundError("Falta requirements.txt en el repositorio.")
+    print("Instalando dependencias faltantes:", ", ".join(_faltantes))
+    subprocess.run([sys.executable, "-m", "pip", "install", "-r", requisitos],
+                   check=True)
+
+# Indica al motor empaquetado dónde está la configuración del repositorio.
+os.environ["MN_REPO"] = REPO
 
 # --- Motor de calificación -------------------------------------------
 # Se usa el código fuente si está (rama `test`, para depurar); si no, el blob
@@ -141,7 +212,7 @@ _lib = os.path.join(REPO, "lib")
 if _lib not in sys.path:
     sys.path.insert(0, _lib)          # ajuste_curvas y, si está, mn_motor
 
-if os.path.isdir(_ruta_modulos):
+if os.path.isfile(os.path.join(_ruta_modulos, "__init__.py")):
     import mn_motor as _motor
     globals().update({{n: getattr(_motor, n) for n in _motor.__all__}})
     print("Motor       : módulos de lib/mn_motor (modo profesor)")
@@ -199,8 +270,8 @@ if ES_COLAB:
     creds.refresh(google.auth.transport.requests.Request())
     info = requests.get(
         "https://www.googleapis.com/drive/v3/about?fields=user",
-        headers={{"Authorization": "Bearer " + creds.token}}, timeout=20).json()
-    cuenta = info.get("user", {{}})
+        headers={"Authorization": "Bearer " + creds.token}, timeout=20).json()
+    cuenta = info.get("user", {})
     email = cuenta.get("emailAddress", "")
     nombre = cuenta.get("displayName", "")
 else:
@@ -279,7 +350,7 @@ mano_comprueba("{metodo}", [{args}])""")
     md(nb, f"""
 ### 💻 Programa la función
 
-Abre `ejercicios/{archivo}` (en Codespaces) o copia la plantilla aquí abajo.
+Abre `ejercicios/{archivo}` en GitHub o copia la plantilla aquí abajo.
 El método completo debe **llamar** a sus piezas: no repitas la cuenta.
 """)
     code(nb, f"""#@title 💻 Tu función · {titulo}

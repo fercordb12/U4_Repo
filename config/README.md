@@ -20,15 +20,18 @@ también en el cuaderno y en `tests/test_ajuste_curvas.py`.
 
 ## Backend
 
-Esta unidad no tiene Apps Script. Si se conecta uno, copia el patrón de
-`U3_Repo/config/config.yaml`:
+Las credenciales del Apps Script **no se publican** en `main`: aquí
+`evaluacion.webhook_token` va vacío y `apps_script_url` sí (la URL no es
+secreta). El valor real del token vive en la rama `test` y
+`tools/build_grader.py` lo **empaqueta dentro de cada `grader/<cuaderno>.txt`**
+al construir los blobs.
 
-```yaml
-evaluacion:
-  webhook_token: "..."
-  apps_script_url: "..."
-  max_intentos: 5
-```
+Para rotar el token:
 
-El motor acepta además variables de entorno para no escribir secretos en el
-repo: `MN_APPS_URL`, `MN_TOKEN` y `MN_REPO` (ruta del repositorio).
+1. edita `config/config.yaml` en la rama `test`;
+2. `python tools/build_grader.py` (reconstruye y verifica los 4 blobs);
+3. copia `grader/*.txt` a `main` y publica.
+
+El motor resuelve las credenciales en este orden: variables de entorno
+(`MN_APPS_URL`, `MN_TOKEN`) → blob empaquetado → `config/config.yaml`. Así un
+fork atrasado nunca usa un token viejo.

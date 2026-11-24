@@ -23,14 +23,21 @@ verificación a mano, verificación de preguntas, envío y consulta del envío.
 | **03** | **Mínimos cuadrados** | $S_r$, regresión lineal, cuadrática, $s_{y/x}$, $r^2$ |
 | **04** | **Casos (U3 + U4)** | sistema 3×3 por Gauss (repaso) · calibración con ecuaciones normales resueltas por Gauss · serie de Fourier (tarea extra) |
 
+> 📝 **Versión v2 del cuaderno 03.** `notebooks/U4_03_Minimos_Cuadrados_v2.ipynb`
+> cubre los mismos métodos con explicaciones ampliadas de cada figura
+> (PT5.1, 17.2, 17.4, 17.11 y 13.6) y con **el código escrito dentro del
+> cuaderno**: no hace falta editar `ejercicios/`, tener cuenta de GitHub ni usar
+> Codespaces. En Colab solo se descarga el material del curso (solo lectura).
+
 ### 🔁 El flujo de cada método
 
 1. **Explicación.** Teoría corta, ecuación numerada del libro y figura.
 2. **A mano.** `mano_enunciado(...)` con datos sembrados por tu número de
    control. Reportas los valores con **4 decimales** y `mano_comprueba(...)`
    te dice si están dentro de tolerancia (no revela la respuesta).
-3. **Programar.** Abres el archivo de `ejercicios/` que ya viene armado,
-   completas la función y la pruebas con `practica(...)`.
+3. **Programar.** Completas la función —en el archivo de `ejercicios/` que ya
+   viene armado o, en la versión v2, en una celda del propio cuaderno— y la
+   pruebas con `practica(...)`.
 4. **Laboratorio.** `visualizar.laboratorio(...)` dibuja el método y tu
    resultado.
 5. **Preguntas.** Una o dos preguntas **teóricas** de opción múltiple, dentro
@@ -44,6 +51,10 @@ verificación a mano, verificación de preguntas, envío y consulta del envío.
   evalúa el criterio, no la transcripción del algoritmo.
 - Las **actividades a mano** se verifican localmente y quedan como evidencia;
   no restan puntos si te equivocas, pero sí te avisan.
+- El puntaje se normaliza a **100** y **cada pregunta vale según su
+  dificultad** (`peso:` en su archivo de `preguntas/`): en el cuaderno 03, por
+  ejemplo, valen 15, 20, 20, 20 y 25. `calificar()` muestra el total y el
+  backend recibe los pesos para guardar el mismo número.
 
 El cuaderno 04 cierra el puente entre unidades: las **ecuaciones normales** de
 un ajuste son un sistema lineal, y se resuelven con eliminación gaussiana
@@ -126,30 +137,37 @@ U4_Repo/
 
 ### En Google Colab
 
-1. Haz un **fork público** del repositorio del curso (así las horas de
-   Codespaces se cobran a tu cuenta, no al repositorio del profesor).
-2. Abre el cuaderno desde tu fork (o súbelo a Drive).
-3. Ejecuta la **primera celda**. Detecta que estás en Colab, monta tu Drive y te
-   pide **una sola vez** el enlace de tu fork. Lo guarda en
-   `MyDrive/CursoMN/u4_repo.json`: en las siguientes sesiones lo reutiliza sin
-   volver a preguntar (y te deja cambiarlo con un botón).
-4. Clona o actualiza el repo en `MyDrive/CursoMN/U4_Repo`, carga el blob de
-   `grader/` y continúa.
+1. Haz un **fork público** del repositorio del curso y trabaja **en tu fork**:
+   edita los archivos directamente en GitHub y confirma cada cambio (commit).
+   No hace falta Codespaces.
+2. Abre el cuaderno desde tu fork en Colab.
+3. Ejecuta la **primera celda**. Monta tu Drive y te pide **una sola vez** el
+   enlace de tu fork; lo guarda en `MyDrive/CursoMN/u4_repo.json` y en las
+   siguientes sesiones lo reutiliza sin volver a preguntar.
+4. Cada vez que ejecutes esa celda se **actualiza sola**, en dos pasos:
+   - tus commits de GitHub (`merge --ff-only` con tu fork);
+   - el material del curso desde `upstream/main` (`lib/`, `grader/`, `config/`,
+     `docs/`, `ejercicios/`, `tools/`), aunque tu fork esté atrasado.
+
+   Vuelve a ejecutarla después de cada commit y sigue con la celda de
+   identificación.
 
 > 📦 El motor viaja **empaquetado** en `grader/<cuaderno>.txt`: el cuaderno no
-> depende de que tu fork tenga `lib/mn_motor`.
+> depende de que tu fork tenga `lib/mn_motor`. Las credenciales del backend
+> también viajan ahí, así que un fork viejo nunca usa un token caducado.
 
-### En GitHub Codespaces
+> 🧪 Para probar el camino de Colab sin subir nada a Drive:
+> `python tools/simular_colab.py` monta un Drive falso y ejecuta las celdas
+> desde un directorio que no es el repositorio (igual que `/content`).
+> `--ref HEAD` simula lo último publicado, `--clonar` prueba el refresco real
+> contra GitHub y `--backend local` usa un Apps Script falso, sin escribir en
+> la hoja real.
 
-El repo incluye `.devcontainer/devcontainer.json` y `requirements.txt`. Al abrir
-el botón **Code → Codespaces**, el contenedor instala NumPy, SciPy, SymPy,
-Matplotlib, JupyterLab y las herramientas de notebooks.
+### En GitHub Codespaces (opcional)
 
-> ⏱️ **Horas:** un Codespace de 2 núcleos consume 2 horas de cómputo por cada
-> hora de reloj. Las 120 horas-núcleo del plan gratuito equivalen a ~60 horas
-> reales al mes. Cierra la pestaña y usa **Stop current codespace** al terminar;
-> un Codespace detenido no consume cómputo, sólo almacenamiento. El tiempo de
-> inactividad se puede configurar en la cuenta (30 min por omisión).
+El repo conserva `.devcontainer/devcontainer.json` y `requirements.txt` por si
+quieres un entorno completo, pero **el curso no usa Codespaces**: los cambios se
+hacen en GitHub y los cuadernos se ejecutan en Colab.
 
 ### 🌐 Teoría en GitHub Pages
 
